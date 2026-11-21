@@ -1,42 +1,41 @@
-# Time Doodle: put it online for free (GitHub Pages)
+# Time Doodle
 
-You get a free web address like `https://YOUR-USERNAME.github.io/timetable/`. No domain to buy.
-GitHub Pages only hosts files, so the live updates are stored in a free Firebase database. Do Part 1 first.
+A lightweight, real-time collaborative timetable for coordinating schedules with friends across different time zones. Paint your daily routine onto a shared board, share the link, and instantly see when everyone is free.
 
-## Part 1. Create the database (Firebase, free)
+**Live App:** https://YOUR-USERNAME.github.io/timetable/
 
-1. Go to https://console.firebase.google.com and sign in with a Google account.
-2. **Add project**, name it `shared-timetable`, turn Google Analytics off.
-3. Left menu: **Build > Realtime Database > Create Database**. Pick a region near you. Choose **locked mode**.
-4. Open the **Rules** tab, delete everything, paste the contents of `firebase-rules.json`, click **Publish**.
-5. Click the gear icon > **Project settings > General**. Under **Your apps** click the web icon `</>`, register an app, and copy the `firebaseConfig` values.
-6. Open `index.html` in a text editor. Find `PASTE YOUR FIREBASE SETTINGS HERE` and replace the five placeholder values. If `databaseURL` is missing, copy it from the top of the Realtime Database page.
+## Features
 
-These settings are not secret. The rules file is what protects the data.
+- **Real-Time Sync:** Changes appear live for everyone viewing the board using Firebase Realtime Database.
+- **Automatic Time Zone & DST Conversion:** Schedules are stored in each person's local hour, automatically adjusting for time zone differences and daylight saving shifts.
+- **Brush Presets:** Quickly block out time using color-coded brushes (Work, Sleep, Free, Busy) and switch between light and dark themes.
+- **Zero-Friction Access:** No sign-ups required—just open the link, add your column, and share it with your group.
+- **Easy Cleanup:** Remove your own column anytime directly from the interface.
 
-## Part 2. Publish on GitHub Pages
+## Run Your Own Copy
 
-1. Create a free account at https://github.com if you don't have one.
-2. Click **New repository**. Name it `timetable`, keep it **Public**, click **Create repository**.
-3. Click **uploading an existing file**, drag in `index.html`, then click **Commit changes**.
-4. Go to **Settings > Pages**. Under **Build and deployment** choose **Deploy from a branch**, branch `main`, folder `/ (root)`, then **Save**.
-5. Wait about a minute and refresh the Pages screen. Your link appears at the top. Open it, join, then send the link to your friends.
+If you want to host your own private instance of Time Doodle:
 
-## Changing the page later
+### 1. Set up Firebase
+1. Create a new project in the [Firebase Console](https://console.firebase.google.com) (Google Analytics is not needed).
+2. Navigate to **Build > Realtime Database > Create Database**, select your region, and start in **locked mode**.
+3. Open the **Rules** tab and apply your database security rules (from `firebase-rules.json`), then click **Publish**.
+4. Go to **Project settings > General**, register a new **Web app** (`</>`), and copy the `firebaseConfig` object.
 
-1. On GitHub open `index.html`, click the pencil icon, edit, and click **Commit changes**.
-2. Wait about a minute, then refresh the site with Ctrl+Shift+R (Cmd+Shift+R on Mac).
+### 2. Configure & Deploy
+1. Open `index.html` and locate `PASTE YOUR FIREBASE SETTINGS HERE`.
+2. Replace the placeholder keys with your `firebaseConfig` values (grab `databaseURL` from the top of your Realtime Database dashboard if it isn't included).
+3. Push `index.html` to a public GitHub repository.
+4. Go to **Settings > Pages**, set the source to **Deploy from a branch** (`main` / `/ (root)`), and save. Your live link will be ready in about a minute.
 
-Where to change things inside `index.html`:
-- **Colors:** the `:root{...}` lines at the top of the `<style>` block (`--accent`, `--free`, `--busy`, `--all`). The dark-mode set is the next line.
-- **Fonts:** the Google Fonts `<link>` in the head, and the `font-family` lines (`Caveat Brush` for titles, `Patrick Hand` for text).
-- **Timetable background:** the CSS block marked `animated paper-and-doodles background`. Remove the `animation:` lines to make it still, or change `opacity` to make it softer.
-- **Brushes (Work, Sleep, ...):** the `BR` list in the script.
-- **Countries and time zones:** the `COUNTRIES` list in the script.
+## Customization
 
-## Notes
+All styling and configuration live directly inside `index.html`:
+- **Theme Colors:** Edit the CSS variables (`--accent`, `--free`, `--busy`, `--all`) inside `:root` at the top of the `<style>` tag (dark mode variables follow right below).
+- **Typography:** Swap the Google Fonts `<link>` in `<head>` and update the `font-family` rules (`Caveat Brush` for headings, `Patrick Hand` for body text).
+- **Background:** Modify `opacity` or remove `animation:` inside the `animated paper-and-doodles background` CSS block.
+- **Brushes & Regions:** Update the `BR` array to change brush labels/colors, or edit `COUNTRIES` in the `<script>` tag to adjust available time zones.
 
-- Anyone with the link can edit any column. That is fine for friends, so don't post the link publicly.
-- Plans are stored by each person's own local hour, so daylight saving changes are handled automatically.
-- To delete your data, use **Remove my column** in the page, or delete entries in the Firebase console.
-- The free Firebase plan is far more than this page needs.
+## Privacy Note
+
+Anyone with your board's URL can view and edit columns on that board, so only share your live link directly with the people you are planning with.
