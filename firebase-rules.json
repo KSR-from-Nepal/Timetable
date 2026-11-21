@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "people": {
+      ".read": true,
+      "$id": {
+        ".write": true,
+        "name":      { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+        "country":   { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "tz":        { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "updatedAt": { ".validate": "newData.isNumber()" },
+        "slots": {
+          "$h": { ".validate": "newData.isString() && newData.val().length <= 100" }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

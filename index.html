@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shared Timetable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fffdf6;--dots:rgba(43,43,58,.16);--card:#fff;--ink:#2b2b3a;--muted:#6a6a80;--line:#2b2b3a;--accent:#ff6b6b;--free:#c8f2d4;--busy:#e6e3ff;--night:rgba(43,43,58,.14);--now:#fff0a6;--all:#8be3a8;--danger:#d92d20}
+@media(prefers-color-scheme:dark){:root{--paper:#1d1b26;--dots:rgba(255,255,255,.08);--card:#2a2736;--ink:#f4f1ea;--muted:#b3aec4;--line:#f4f1ea;--accent:#ff8f8f;--free:#1f4a37;--busy:#3a3566;--night:rgba(0,0,0,.38);--now:#5a4d12;--all:#2f7d55;--danger:#ff8a7a}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--paper) radial-gradient(var(--dots) 1.2px,transparent 1.3px) 0 0/20px 20px;color:var(--ink);font:19px/1.45 "Patrick Hand","Segoe Print","Chalkboard SE",system-ui,sans-serif}
+main{max-width:1560px;margin:0 auto;padding:18px 14px 70px}
+h1{font-family:"Caveat Brush","Patrick Hand",cursive;font-weight:400;font-size:46px;line-height:1;margin:0;text-decoration:underline wavy var(--accent);text-underline-offset:6px}
+h2{font-family:"Caveat Brush","Patrick Hand",cursive;font-weight:400;font-size:30px;line-height:1.1;margin:0 0 14px}h2 span{display:inline-block;background:var(--accent);color:#fff;border-radius:50%;width:26px;height:26px;text-align:center;line-height:26px;font-size:15px;margin-right:6px;transform:rotate(-6deg)}
+p{margin:0 0 10px}.muted,small{color:var(--muted)}
+.dd{border:2.5px solid var(--ink);border-radius:14px 22px 16px 24px/22px 14px 24px 16px;box-shadow:4px 5px 0 var(--ink);background:var(--card)}
+.panel{padding:16px;margin:0 0 20px;animation:drop .4s both}.panel:nth-of-type(2){animation-delay:.08s}.panel:nth-of-type(3){animation-delay:.16s}
+.card{max-width:470px;margin:36px auto;padding:20px}
+label{display:block;font-weight:700;margin:14px 0 0}
+input[type=text],select{display:block;width:100%;margin-top:6px;padding:9px 11px;font:inherit;color:inherit;background:var(--paper);border:2px solid var(--ink);border-radius:10px 14px 10px 14px}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{padding:9px 16px;margin-top:16px;background:var(--accent);color:#fff;font-weight:700;border:2.5px solid var(--ink);border-radius:12px 18px 12px 18px;box-shadow:3px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.btn.ghost{background:var(--card);color:var(--ink);margin:0;padding:6px 12px;font-weight:400}.btn.danger{color:var(--danger)}
+.btn:hover{transform:rotate(-1.5deg) translateY(-1px)}.btn:active{transform:translate(3px,4px);box-shadow:0 0 0 var(--ink)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.topbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:18px}.topbar>div{flex:1 1 240px}
+.live{font-size:13px;display:inline-flex;gap:6px;align-items:center;padding:4px 10px}.dot{width:10px;height:10px;border-radius:50%;background:var(--danger)}.live.on .dot{background:#1fa971;animation:beat 1.6s infinite}
+.err{border:2px solid var(--danger);color:var(--danger);padding:10px 14px;margin-bottom:12px;border-radius:12px}
+.chips{display:flex;flex-wrap:wrap;gap:12px}
+.chip{display:flex;align-items:center;gap:9px;padding:8px 14px 8px 8px;background:var(--card);border:2.5px dashed var(--muted);border-radius:40px;text-align:left;transition:transform .15s,background .25s,border-color .25s,opacity .25s;opacity:.65}
+.chip:hover{transform:translateY(-2px) rotate(-1deg)}
+.chip.on{background:var(--c);color:#2b2b3a;border:2.5px solid var(--ink);box-shadow:3px 4px 0 var(--ink);opacity:1}
+.chip.me{cursor:default}.chip.pop{animation:pop .45s}
+.chip .av{font-size:26px;width:42px;height:42px;display:grid;place-items:center;background:#fff;border:2px solid #2b2b3a;border-radius:50%}
+.chip b{display:block;line-height:1.1}.chip small{display:block;font-size:12px}.chip.on small{color:#4a4a5e}.chip .tg{font-weight:700}
+.opt{display:flex;gap:8px;align-items:center;font-weight:400;margin:14px 0 0}.opt input{width:20px;height:20px;accent-color:var(--accent)}
+#sumLine{font-weight:700;margin-bottom:10px}
+#strip{display:grid;grid-template-columns:repeat(24,1fr);gap:4px;margin-bottom:6px}
+.hr{font:inherit;font-size:10px;padding:8px 0;border:2px solid var(--ink);border-radius:8px 10px 8px 10px;background:var(--card);color:var(--muted);transition:background .3s,transform .15s}
+.hr.ok{background:var(--all);color:#14341f;font-weight:700}.hr.nowh{outline:3px solid var(--accent);outline-offset:1px}.hr:hover{transform:translateY(-3px)}.hr.in{animation:pop .5s backwards;animation-delay:calc(var(--i)*22ms)}
+.wins{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:14px}
+.win{text-align:left;padding:12px 14px;transition:transform .15s;animation:drop .35s backwards}.win:hover{transform:rotate(-1deg) translateY(-3px)}.win:active{transform:scale(.97)}
+.win .big{font-family:"Caveat Brush","Patrick Hand",cursive;font-size:32px;font-weight:400}.win .bd{display:inline-block;font-size:12px;background:var(--now);color:#2b2b3a;border:2px solid #2b2b3a;border-radius:20px;padding:0 8px;margin:0 4px 4px 0;transform:rotate(-3deg)}
+.win ul{margin:8px 0;padding:0;list-style:none;font-size:13px}.win li{display:flex;justify-content:space-between;border-bottom:1.5px dotted var(--muted)}
+.empty{padding:16px;text-align:center;border:2.5px dashed var(--muted);border-radius:16px;grid-column:1/-1}
+.brushes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.br{padding:6px 12px;background:var(--card);border:2.5px solid var(--ink);border-radius:20px;transition:transform .12s,background .2s}.br:hover{transform:rotate(-2deg) scale(1.05)}.br.sel{background:var(--accent);color:#fff;box-shadow:3px 3px 0 var(--ink);transform:rotate(-2deg)}
+.wrap{overflow:auto;max-height:68vh;border:2.5px solid var(--ink);border-radius:14px;background:var(--card)}
+table{border-collapse:separate;border-spacing:0;width:100%}th,td{border-bottom:1.5px dashed rgba(128,128,128,.55);border-right:1.5px dashed rgba(128,128,128,.55);padding:0;vertical-align:top}
+thead th{position:sticky;top:0;z-index:3;background:var(--card);text-align:left;padding:8px 10px;min-width:165px;border-bottom:2.5px solid var(--ink);transition:opacity .3s}
+thead th.t,thead th.f{min-width:0}thead th.t{left:0;z-index:4}thead small{display:block;font-weight:400;font-size:12px}
+tbody th{position:sticky;left:0;z-index:2;background:var(--card);padding:8px 10px;white-space:nowrap;text-align:left}
+td.f{text-align:center;padding:8px;font-size:13px;white-space:nowrap;color:var(--muted)}
+tr.now th{background:var(--now);color:#2b2b3a}tr.all th,tr.all td.f{background:var(--all);color:#14341f;font-weight:700}
+tr.hl td,tr.hl th{animation:flash 1.2s 2}
+td.c{min-width:165px;position:relative;transition:background .3s,opacity .3s}td.c.free{background:var(--free)}td.c.busy{background:var(--busy)}td.dim,th.dim{opacity:.4}
+td.c.night::after{content:"";position:absolute;inset:0;background:var(--night);pointer-events:none}
+td.pop{animation:pop .4s}
+.lt{display:block;font-size:11px;color:var(--muted);padding:3px 10px 0;position:relative;z-index:1}.txt{padding:2px 10px 7px;min-height:26px;overflow-wrap:anywhere;position:relative;z-index:1}
+td.c input{display:block;width:100%;border:0;background:transparent;font:inherit;color:inherit;padding:2px 10px 7px;min-height:28px;position:relative;z-index:1}
+.paint td.mine{touch-action:none;cursor:crosshair}.paint td.mine input{pointer-events:none}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}.controls select{width:auto;margin:0;padding:6px 10px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin-top:12px}.legend i{display:inline-block;width:14px;height:14px;border:2px solid var(--ink);border-radius:4px;vertical-align:-2px;margin-right:5px}
+.bst{position:fixed;z-index:99;pointer-events:none;font-size:20px;animation:fly .9s ease-out forwards}
+@keyframes pop{0%{transform:scale(.7)}55%{transform:scale(1.15) rotate(-3deg)}100%{transform:scale(1)}}
+@keyframes drop{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes flash{0%,100%{filter:none}50%{filter:brightness(1.25) saturate(1.6)}}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(260deg);opacity:0}}
+@keyframes beat{50%{transform:scale(1.5)}}
+@media(max-width:700px){#strip{grid-template-columns:repeat(12,1fr)}h1{font-size:26px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+b,strong,th,label,.btn,.tg,.win .bd,#sumLine,.hr.ok{font-weight:400}
+.tabs{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 24px}
+.tab{font-family:"Caveat Brush","Patrick Hand",cursive;font-size:26px;padding:8px 26px;background:var(--card);color:var(--ink);border:2.5px solid var(--ink);border-radius:16px 24px 14px 24px;box-shadow:3px 4px 0 var(--ink);transition:transform .15s,background .2s}
+.tab:hover{transform:rotate(-1.5deg)}.tab.sel{background:var(--accent);color:#fff;transform:translate(2px,3px);box-shadow:1px 1px 0 var(--ink)}
+#vFind{max-width:1100px;margin:0 auto}
+.panel{padding:26px;margin:0 0 32px}
+.chips{gap:18px}.chip{padding:10px 22px 10px 10px}.chip .av{font-size:34px;width:56px;height:56px}.chip b{font-size:22px}.chip small{font-size:14px}
+.hr{font-size:14px;padding:14px 0}#sumLine{font-size:22px}
+.wins{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px}.win{padding:16px 18px}.win ul{font-size:16px}
+.br{font-size:19px;padding:8px 16px}
+.wrap{max-height:calc(100vh - 230px);min-height:560px}
+thead th{min-width:230px;padding:14px 16px;font-size:22px}thead th.t,thead th.f{min-width:0}thead small{font-size:15px}
+tbody th{font-family:"Caveat Brush","Patrick Hand",cursive;font-size:26px;padding:12px 18px}
+td.f{font-size:16px;padding:12px}
+td.c{min-width:230px;height:78px}.lt{font-size:14px;padding:8px 16px 0}
+.txt{font-size:20px;padding:4px 16px 12px;min-height:36px}td.c input{font-size:20px;padding:4px 16px 12px;min-height:44px}
+td.mine{border-right:2.5px solid var(--ink)}
+.legend{font-size:15px}.controls{margin-top:8px}
+@media(max-width:700px){main{padding:14px 10px 60px}.panel{padding:16px}td.c{min-width:190px}thead th{min-width:190px}}
+
+/* animated paper-and-doodles background behind the timetable */
+.stage{position:relative;border:2.5px solid var(--ink);border-radius:14px;overflow:hidden;--stage:#fff8e3}
+@media(prefers-color-scheme:dark){.stage{--stage:#25222f}}
+.wrap{border:0;border-radius:0;background:transparent;position:relative;z-index:1}
+.bg{position:absolute;inset:0;background:var(--stage);overflow:hidden;z-index:0}
+.bg::before{content:"";position:absolute;inset:-160px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' fill='none' stroke='%23888' stroke-opacity='.4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M30 26l4 9 10 1-8 6 3 10-9-6-9 6 3-10-8-6 10-1z'/%3E%3Cpath d='M92 40q8-14 16 0t16 0'/%3E%3Ccircle cx='122' cy='112' r='9'/%3E%3Cpath d='M40 112v18M31 121h18'/%3E%3Cpath d='M78 98q7 8 0 17'/%3E%3C/svg%3E") 0 0/160px 160px;opacity:.6;animation:drift 30s linear infinite}
+.bg::after{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 20% 30%,rgba(255,107,107,.2),transparent 40%),radial-gradient(circle at 80% 20%,rgba(79,172,254,.2),transparent 40%),radial-gradient(circle at 60% 85%,rgba(120,220,160,.22),transparent 40%);animation:blob 20s ease-in-out infinite alternate}
+.bg i{position:absolute;z-index:1;font-style:normal;font-size:30px;opacity:.4;animation:bob 8s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(160px,160px)}}
+@keyframes blob{to{transform:translate(5%,-4%) rotate(5deg) scale(1.1)}}
+@keyframes bob{to{transform:translateY(-22px) rotate(12deg)}}
+td.f{background:var(--card)}
+@supports (background:color-mix(in srgb,red,blue)){td.c.free{background:color-mix(in srgb,var(--free) 80%,transparent)}td.c.busy{background:color-mix(in srgb,var(--busy) 84%,transparent)}td.f{background:color-mix(in srgb,var(--card) 72%,transparent)}}
+@media(prefers-reduced-motion:reduce){.bg::before,.bg::after,.bg i{animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<div id="err" class="err" hidden></div>
+<section id="setup" class="card dd" hidden><h2>Setup needed</h2><p>This page isn’t connected to a database yet. Paste your Firebase settings into <code>firebaseConfig</code> in <code>index.html</code>. Steps are in <code>README.md</code>.</p></section>
+<section id="loading" class="card dd"><p id="loadingMsg">Connecting…</p></section>
+<section id="join" class="card dd" hidden>
+  <h1 id="joinTitle">Time Doodle</h1>
+  <p class="muted" id="joinHint">Enter your name and country. Your column uses your own local time, and everyone else’s lines up with it.</p>
+  <form id="joinForm">
+    <label for="nameIn">Your name</label><input id="nameIn" type="text" maxlength="40" required autocomplete="given-name">
+    <label for="countryIn">Country</label><select id="countryIn" required></select>
+    <div id="tzWrap" hidden><label for="tzIn">Time zone</label><select id="tzIn"></select></div>
+    <button type="submit" id="joinBtn" class="btn">Join timetable</button>
+    <button type="button" id="cancelEdit" class="btn ghost" hidden>Cancel</button>
+  </form>
+  <div id="rejoin" hidden><hr><p class="muted">Already joined on another phone or computer?</p><select id="rejoinSel"></select>
+    <button type="button" id="rejoinBtn" class="btn ghost" style="margin-top:8px">Continue as this person</button></div>
+</section>
+
+<section id="app" hidden>
+    <div class="topbar">
+      <div><h1>Time Doodle</h1><div class="muted" id="clock"></div></div>
+      <span id="live" class="live dd"><span class="dot"></span><span id="liveTxt">Connecting</span></span>
+    </div>
+    <nav class="tabs" id="tabs"><button type="button" class="tab sel" data-t="find">🧭 Find a time</button><button type="button" class="tab" data-t="day">🗓️ My timetable</button></nav>
+    <div id="vFind">
+    <div class="panel dd">
+      <h2><span>1</span>Who do you want to hang out with?</h2>
+      <div id="chips" class="chips"></div>
+      <label class="opt"><input type="checkbox" id="skipNight" checked> Skip night hours (22:00 to 06:00 for anyone)</label>
+    </div>
+    <div class="panel dd">
+      <h2><span>2</span>Free together</h2>
+      <div id="sumLine"></div>
+      <div id="strip"></div>
+      <div class="muted" style="font-size:12px">Green hours are free for everyone picked. Tap one to jump to it in the table.</div>
+      <div id="wins" class="wins"></div>
+    </div>
+    </div>
+    <div id="vDay" hidden>
+    <div class="panel dd">
+      <h2>Your timetable <small>(rows in <b id="dayTz"></b> time)</small></h2>
+      <p class="muted">Pick a brush, then click or drag down your own column to fill hours fast. Or choose ✏️ Type and write anything.</p>
+      <div class="brushes" id="brushes"></div>
+      <div class="stage"><div class="bg" aria-hidden="true"><i style="left:6%;top:70%">⭐</i><i style="left:24%;top:20%;animation-delay:-3s">☁️</i><i style="left:46%;top:75%;animation-delay:-5s">✨</i><i style="left:66%;top:25%;animation-delay:-2s">🎈</i><i style="left:84%;top:68%;animation-delay:-6s">💚</i><i style="left:92%;top:15%;animation-delay:-4s">🌙</i></div>
+      <div class="wrap"><table id="grid"></table></div></div>
+      <div class="legend"><span><i style="background:var(--free)"></i>Free</span><span><i style="background:var(--busy)"></i>Has a plan</span><span><i style="background:var(--night)"></i>Night there</span><span><i style="background:var(--now)"></i>Now</span><span><i style="background:var(--all)"></i>Everyone free</span></div>
+    </div>
+    </div>
+    <div class="controls">
+      <label for="viewSel" style="margin:0;font-weight:400">Rows show time in</label><select id="viewSel"></select>
+      <button class="btn ghost" id="copyBtn" type="button">Copy page link</button>
+      <button class="btn ghost" id="editBtn" type="button">Edit my details</button>
+      <button class="btn ghost danger" id="leaveBtn" type="button">Remove my column</button>
+    </div>
+</section>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+/* ============ PASTE YOUR FIREBASE SETTINGS HERE (see README.md) ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCoSJjYX4s9X-Qe6I2W9bzQFKTSaccQhTA",
+  authDomain: "shared-timetable-ae623.firebaseapp.com",
+  databaseURL: "https://shared-timetable-ae623-default-rtdb.firebaseio.com",
+  projectId: "shared-timetable-ae623",
+  appId: "1:707787537529:web:6c7a07dea2bdbd298a28a8"
+};
+/* =========================================================================== */
+
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
+const short = c => c.split(" (")[0];
+const hash = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+const AV = ["🐼","🦊","🐸","🐙","🦄","🐯","🐨","🦉"], COL = ["#ffd6e0","#cfe8ff","#d4f5c4","#ffe7a3","#e6d9ff","#ffd9c2","#c9f2ee","#f3d1ff"];
+const BR = [["✏️","Type"],["💼","Work"],["🎓","Class"],["😴","Sleep"],["🍽️","Meal"],["🏋️","Gym"],["🎮","Play"],["🚌","Travel"],["🧽","Erase"]];
+
+const COUNTRIES = [
+  ["Italy","Europe/Rome"],["Nepal","Asia/Kathmandu"],["South Korea","Asia/Seoul"],
+  ["Australia (Sydney, Melbourne, Canberra)","Australia/Sydney"],["Australia (Brisbane)","Australia/Brisbane"],["Australia (Adelaide)","Australia/Adelaide"],["Australia (Perth)","Australia/Perth"],["Australia (Darwin)","Australia/Darwin"],
+  ["India","Asia/Kolkata"],["Japan","Asia/Tokyo"],["China","Asia/Shanghai"],["United Arab Emirates","Asia/Dubai"],["Israel","Asia/Jerusalem"],
+  ["United Kingdom","Europe/London"],["Germany","Europe/Berlin"],["France","Europe/Paris"],["Spain","Europe/Madrid"],
+  ["USA (New York)","America/New_York"],["USA (Chicago)","America/Chicago"],["USA (Denver)","America/Denver"],["USA (Los Angeles)","America/Los_Angeles"],["Canada (Toronto)","America/Toronto"]
+];
+
+/* ---------- time zone helpers ---------- */
+const dtfCache = {};
+const dtf = tz => dtfCache[tz] || (dtfCache[tz] = new Intl.DateTimeFormat("en-CA", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }));
+function parts(date, tz) { const o = {}; for (const x of dtf(tz).formatToParts(date)) if (x.type !== "literal") o[x.type] = +x.value; return { y: o.year, m: o.month, d: o.day, h: o.hour % 24, min: o.minute }; }
+function offsetMin(date, tz) { const p = parts(date, tz); return (Date.UTC(p.y, p.m - 1, p.d, p.h, p.min) - Math.floor(date.getTime() / 60000) * 60000) / 60000; }
+function zoned(y, m, d, h, min, tz) { const g = Date.UTC(y, m - 1, d, h, min); let t = g - offsetMin(new Date(g), tz) * 60000; t = g - offsetMin(new Date(t), tz) * 60000; return new Date(t); }
+
+/* ---------- state ---------- */
+let db = null, people = {}, me = localStorage.getItem("tt_me") || null, viewTz = localStorage.getItem("tt_view") || null;
+let editing = false, loaded = false, view = "";
+let unsel = new Set(), skipNight = localStorage.getItem("tt_skip") !== "0", brush = 0, hl = null, popId = null, anim = true, painting = false, lastSlot = null, raf = 0;
+const popSlots = new Set(), timers = {};
+let tab = "find";
+
+function showError(err) { const e = $("err"); e.textContent = "Something went wrong: " + (err && err.message ? err.message : err); e.hidden = false; }
+function show(v) { for (const id of ["setup", "loading", "join", "app"]) $(id).hidden = id !== v; if (view !== v) { view = v; if (v === "join") initJoin(); } }
+
+if (firebaseConfig.databaseURL.includes("PASTE")) show("setup");
+else {
+  try {
+    db = getDatabase(initializeApp(firebaseConfig));
+    onValue(ref(db, "people"), snap => { people = snap.val() || {}; loaded = true; route(); }, showError);
+    onValue(ref(db, ".info/connected"), s => { const on = !!s.val(); $("live").classList.toggle("on", on); $("liveTxt").textContent = on ? "Live" : "Offline"; });
+    setTimeout(() => { if (!loaded) $("loadingMsg").textContent = "Can’t reach the database. Check the Firebase settings and rules in README.md."; }, 8000);
+    setInterval(() => { if (view === "app" && !painting) render(); }, 60000);
+  } catch (err) { showError(err); }
+}
+function route() {
+  if (!loaded) return;
+  if (editing) show("join"); else if (me && people[me]) show("app"); else show("join");
+  if (view === "join") fillRejoin();
+  if (view === "app") render();
+}
+
+/* ---------- join / edit ---------- */
+function allTimeZones() { try { if (Intl.supportedValuesOf) return Intl.supportedValuesOf("timeZone"); } catch (e) {} return COUNTRIES.map(c => c[1]); }
+function initJoin() {
+  const sel = $("countryIn"); sel.innerHTML = "";
+  sel.append(new Option("Choose your country", ""));
+  COUNTRIES.forEach((c, i) => sel.append(new Option(c[0], String(i))));
+  sel.append(new Option("Other (choose time zone)", "other"));
+  const tzSel = $("tzIn"); tzSel.innerHTML = "";
+  allTimeZones().forEach(z => tzSel.append(new Option(z.replace(/_/g, " "), z)));
+  const p = editing && me ? people[me] : null;
+  $("nameIn").value = p ? p.name : "";
+  $("joinTitle").textContent = p ? "Edit your details" : "Time Doodle";
+  $("joinHint").hidden = !!p; $("joinBtn").textContent = p ? "Save changes" : "Join timetable";
+  $("cancelEdit").hidden = !p; $("rejoin").hidden = !!p;
+  if (p) { const i = COUNTRIES.findIndex(c => c[0] === p.country && c[1] === p.tz); if (i >= 0) sel.value = String(i); else { sel.value = "other"; tzSel.value = p.tz; } }
+  else { sel.value = ""; tzSel.value = Intl.DateTimeFormat().resolvedOptions().timeZone; }
+  syncTzWrap();
+}
+function syncTzWrap() { $("tzWrap").hidden = $("countryIn").value !== "other"; }
+$("countryIn").addEventListener("change", syncTzWrap);
+function fillRejoin() {
+  const sel = $("rejoinSel"), ids = Object.keys(people);
+  $("rejoin").hidden = editing || !ids.length; if (editing || !ids.length) return;
+  const keep = sel.value; sel.innerHTML = "";
+  ids.sort((a, b) => (people[a].createdAt || 0) - (people[b].createdAt || 0)).forEach(id => sel.append(new Option(people[id].name + " (" + short(people[id].country) + ")", id)));
+  if (keep && people[keep]) sel.value = keep;
+}
+$("rejoinBtn").addEventListener("click", () => { const id = $("rejoinSel").value; if (!id || !people[id]) return; me = id; localStorage.setItem("tt_me", me); route(); });
+$("cancelEdit").addEventListener("click", () => { editing = false; route(); });
+$("joinForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("nameIn").value.trim(), choice = $("countryIn").value; let country, tz;
+  if (choice === "other") { tz = $("tzIn").value; country = tz.replace(/_/g, " "); } else if (choice !== "") { [country, tz] = COUNTRIES[+choice]; }
+  if (!name || !tz) return;
+  try {
+    if (editing && me) { await update(ref(db, "people/" + me), { name, country, tz, updatedAt: Date.now() }); editing = false; }
+    else { me = "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); localStorage.setItem("tt_me", me); await set(ref(db, "people/" + me), { name, country, tz, createdAt: Date.now(), updatedAt: Date.now() }); }
+    route();
+  } catch (err) { showError(err); }
+});
+
+/* ---------- saving + painting ---------- */
+function queueSave(slot, value) {
+  clearTimeout(timers[slot]);
+  timers[slot] = setTimeout(() => {
+    const r = ref(db, "people/" + me + "/slots/" + slot), v = value.trim().slice(0, 100);
+    (v ? set(r, v) : remove(r)).catch(showError);
+    update(ref(db, "people/" + me), { updatedAt: Date.now() }).catch(showError);
+  }, 350);
+}
+function sched() { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { render(); popSlots.clear(); }); }
+function paint(td) {
+  if (!td || !brush) return;
+  const slot = td.dataset.slot, b = BR[brush], v = b[1] === "Erase" ? "" : b[0] + " " + b[1], m = people[me];
+  m.slots = m.slots || {}; if (v) m.slots[slot] = v; else delete m.slots[slot];
+  popSlots.add(slot); queueSave(slot, v); sched();
+}
+$("grid").addEventListener("pointerdown", e => { const td = e.target.closest("td.mine"); if (td && brush) { painting = true; lastSlot = td.dataset.slot; paint(td); e.preventDefault(); } });
+document.addEventListener("pointermove", e => {
+  if (!painting) return;
+  const t = document.elementFromPoint(e.clientX, e.clientY), td = t && t.closest && t.closest("td.mine");
+  if (td && td.dataset.slot !== lastSlot) { lastSlot = td.dataset.slot; paint(td); }
+});
+["pointerup", "pointercancel"].forEach(n => document.addEventListener(n, () => { painting = false; }));
+
+function burst(x, y) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const E = ["✨","🎉","⭐","💚","🎈"];
+  for (let i = 0; i < 12; i++) {
+    const s = el("span", "bst", E[i % E.length]), a = Math.PI * 2 * i / 12, r = 50 + Math.random() * 50;
+    s.style.cssText = "left:" + x + "px;top:" + y + "px;--dx:" + Math.cos(a) * r + "px;--dy:" + Math.sin(a) * r + "px";
+    document.body.append(s); setTimeout(() => s.remove(), 900);
+  }
+}
+function focusRows(s, e, src, ok) {
+  if (src && ok) { const r = src.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2); }
+  setTab("day"); hl = { s, e }; render();
+  const row = $("grid").tBodies[0].rows[s], w = document.querySelector(".wrap");
+  if (row) w.scrollTo({ top: Math.max(0, row.offsetTop - 80), behavior: "smooth" });
+  setTimeout(() => { hl = null; }, 2600);
+}
+
+/* ---------- main render ---------- */
+function render() {
+  const mine = people[me]; if (!mine) return;
+  const act = document.activeElement;
+  const keep = act && act.dataset && act.dataset.slot !== undefined && !act.readOnly ? { slot: act.dataset.slot, value: act.value, pos: act.selectionStart } : null;
+  const ids = [me, ...Object.keys(people).filter(k => k !== me).sort((a, b) => (people[a].createdAt || 0) - (people[b].createdAt || 0))];
+  const tzLabels = {}; ids.forEach(id => { if (!tzLabels[people[id].tz]) tzLabels[people[id].tz] = people[id].country; });
+  if (!viewTz || !tzLabels[viewTz]) viewTz = mine.tz;
+  const vs = $("viewSel"); vs.innerHTML = "";
+  Object.keys(tzLabels).forEach(z => vs.append(new Option(short(tzLabels[z]) + (z === mine.tz ? " (you)" : ""), z))); vs.value = viewTz;
+  const now = new Date(), rp = parts(now, viewTz), mp = parts(now, mine.tz);
+  $("clock").textContent = "Your time in " + short(mine.country) + ": " + pad(mp.h) + ":" + pad(mp.min);
+  $("dayTz").textContent = short(tzLabels[viewTz]);
+
+  // matrix of rows (hours in the viewing time zone) x people
+  const rows = [];
+  for (let h = 0; h < 24; h++) {
+    const inst = zoned(rp.y, rp.m, rp.d, h, 0, viewTz), c = {};
+    ids.forEach(id => { const p = people[id], lp = parts(inst, p.tz);
+      c[id] = { lp, slot: lp.h, text: (p.slots && p.slots[lp.h]) || "", night: lp.h >= 22 || lp.h < 6, day: Math.round((Date.UTC(lp.y, lp.m - 1, lp.d) - Date.UTC(rp.y, rp.m - 1, rp.d)) / 864e5) }; });
+    rows.push(c);
+  }
+  const grp = ids.filter(id => id === me || !unsel.has(id));
+  const okAt = (c, list) => list.every(id => !c[id].text && !(skipNight && c[id].night));
+  const ok = rows.map(c => grp.length > 1 && okAt(c, grp));
+
+  // 1. chips
+  const chips = $("chips"); chips.innerHTML = "";
+  ids.forEach(id => {
+    const p = people[id], isMe = id === me, on = isMe || !unsel.has(id), lp = parts(now, p.tz);
+    const b = el("button", "chip" + (on ? " on" : "") + (isMe ? " me" : "") + (popId === id ? " pop" : "")); b.type = "button";
+    b.style.setProperty("--c", COL[hash(id) % COL.length]);
+    const info = el("span"); info.append(el("b", "", p.name + (isMe ? " (you)" : "")), el("small", "", short(p.country) + " " + pad(lp.h) + ":" + pad(lp.min) + (lp.h >= 22 || lp.h < 6 ? " 🌙" : " ☀️")),
+      el("small", "tg", isMe ? "that’s you" : rows.filter(c => okAt(c, [me, id])).length + "h free together"));
+    b.append(el("span", "av", AV[hash(id) % AV.length]), info);
+    if (!isMe) b.onclick = () => { if (unsel.has(id)) unsel.delete(id); else unsel.add(id); popId = id; anim = true; render(); popId = null; };
+    chips.append(b);
+  });
+
+  // 2. strip + windows
+  const runs = []; ok.forEach((v, h) => { if (v) { const r = runs[runs.length - 1]; if (r && r.e === h) r.e = h + 1; else runs.push({ s: h, e: h + 1 }); } });
+  const nextI = Math.max(0, runs.findIndex(r => r.s >= rp.h)), longI = runs.reduce((b, r, i) => r.e - r.s > runs[b].e - runs[b].s ? i : b, 0);
+  const names = grp.filter(id => id !== me).map(id => people[id].name);
+  $("sumLine").textContent = grp.length < 2 ? (ids.length < 2 ? "Share the link. Your friends’ columns appear here when they join." : "Tap a friend above to find a time together.")
+    : "You + " + names.join(", ") + ": " + (runs.length ? runs.length + " free window" + (runs.length > 1 ? "s" : "") + " today" : "no shared free hour yet");
+  const strip = $("strip"); strip.innerHTML = "";
+  rows.forEach((c, h) => { const d = el("button", "hr" + (ok[h] ? " ok" : "") + (h === rp.h ? " nowh" : "") + (anim ? " in" : ""), pad(h)); d.type = "button"; d.style.setProperty("--i", h);
+    d.title = pad(h) + ":00 " + short(tzLabels[viewTz]) + (ok[h] ? ": everyone free" : ""); d.onclick = () => focusRows(h, h + 1, d, ok[h]); strip.append(d); });
+  const wins = $("wins"); wins.innerHTML = "";
+  if (grp.length > 1 && !runs.length) wins.append(el("div", "empty", "😅 No shared free hour. Try picking fewer people, or untick “skip night hours”."));
+  runs.forEach((r, i) => {
+    const w = el("div", "win dd"); w.tabIndex = 0; w.style.animationDelay = i * 60 + "ms";
+    const bd = el("div"); if (i === nextI) bd.append(el("span", "bd", "⏭ next up")); if (i === longI && runs.length > 1) bd.append(el("span", "bd", "⭐ longest")); w.append(bd);
+    w.append(el("div", "big", pad(r.s) + ":00 to " + pad(r.e % 24) + ":00"), el("small", "", (r.e - r.s) + " hour" + (r.e - r.s > 1 ? "s" : "") + " in " + short(tzLabels[viewTz]) + " time"));
+    const ul = el("ul"); grp.forEach(id => { const x = rows[r.s][id], li = el("li"); li.append(el("span", "", people[id].name), el("span", "", pad(x.lp.h) + ":" + pad(x.lp.min) + (x.day ? " (" + (x.day > 0 ? "+" : "") + x.day + "d)" : ""))); ul.append(li); }); w.append(ul);
+    const cp = el("button", "btn ghost", "Copy invite"); cp.type = "button";
+    cp.onclick = async ev => { ev.stopPropagation(); const t = "Let’s meet! " + pad(r.s) + ":00 to " + pad(r.e % 24) + ":00 " + short(tzLabels[viewTz]) + " time (" + grp.map(id => short(people[id].country) + " " + pad(rows[r.s][id].lp.h) + ":" + pad(rows[r.s][id].lp.min)).join(", ") + ")";
+      try { await navigator.clipboard.writeText(t); cp.textContent = "Copied ✓"; setTimeout(() => cp.textContent = "Copy invite", 1600); } catch (e) { showError("Could not copy. Select the times by hand."); } };
+    w.append(cp); w.onclick = () => focusRows(r.s, r.e, w, true);
+    w.onkeydown = ev => { if (ev.key === "Enter") w.onclick(); };
+    wins.append(w);
+  });
+
+  // 3. brushes + table
+  const bb = $("brushes"); bb.innerHTML = "";
+  BR.forEach((b, i) => { const x = el("button", "br" + (i === brush ? " sel" : ""), b[0] + " " + (b[1] === "Type" ? "Type" : b[1] === "Erase" ? "Free" : b[1])); x.type = "button";
+    x.title = i ? "Paint your hours: pick it, then click or drag over your column" : "Type your own text"; x.onclick = () => { brush = i; render(); }; bb.append(x); });
+  const table = $("grid"); table.innerHTML = ""; table.className = brush ? "paint" : "";
+  const hr = table.createTHead().insertRow();
+  const t0 = el("th", "t"); t0.append(el("b", "", viewTz === mine.tz ? "Your time" : "Time"), el("small", "", short(tzLabels[viewTz]))); hr.append(t0);
+  const f0 = el("th", "f"); f0.append(el("b", "", "Free"), el("small", "", "picked")); hr.append(f0);
+  ids.forEach(id => { const p = people[id], lp = parts(now, p.tz), th = el("th", id === me || !unsel.has(id) ? "" : "dim");
+    th.append(el("b", "", AV[hash(id) % AV.length] + " " + p.name + (id === me ? " (you)" : "")), el("small", "", short(p.country) + ", now " + pad(lp.h) + ":" + pad(lp.min))); hr.append(th); });
+  const tb = table.createTBody();
+  for (let h = 0; h < 24; h++) {
+    const tr = tb.insertRow(); tr.className = (h === rp.h ? "now " : "") + (ok[h] ? "all " : "") + (hl && h >= hl.s && h < hl.e ? "hl" : "");
+    tr.append(el("th", "", pad(h) + ":00"));
+    const fc = tr.insertCell(); fc.className = "f"; fc.textContent = ok[h] ? "✓ all free" : grp.filter(id => !rows[h][id].text).length + " of " + grp.length;
+    ids.forEach(id => {
+      const x = rows[h][id], isMe = id === me, td = tr.insertCell();
+      td.className = "c " + (x.text ? "busy" : "free") + (x.night ? " night" : "") + (isMe || !unsel.has(id) ? "" : " dim") + (isMe ? " mine" : "") + (isMe && popSlots.has(String(x.slot)) ? " pop" : "");
+      td.append(el("span", "lt", pad(x.lp.h) + ":" + pad(x.lp.min) + (x.day ? " (" + (x.day > 0 ? "+" : "") + x.day + " day)" : "")));
+      if (isMe) {
+        td.dataset.slot = x.slot;
+        const inp = el("input"); inp.type = "text"; inp.maxLength = 100; inp.value = x.text; inp.dataset.slot = x.slot; inp.readOnly = !!brush; inp.tabIndex = brush ? -1 : 0;
+        inp.setAttribute("aria-label", "Your plan at " + pad(h) + ":00");
+        inp.addEventListener("input", () => { td.classList.toggle("busy", !!inp.value.trim()); td.classList.toggle("free", !inp.value.trim()); queueSave(x.slot, inp.value); });
+        td.append(inp);
+      } else td.append(el("div", "txt", x.text));
+    });
+  }
+  anim = false;
+  if (keep) { const inp = table.querySelector('input[data-slot="' + keep.slot + '"]'); if (inp) { inp.value = keep.value; inp.focus(); try { inp.setSelectionRange(keep.pos, keep.pos); } catch (e) {} } }
+}
+
+function setTab(t) {
+  tab = t; $("vFind").hidden = t !== "find"; $("vDay").hidden = t !== "day";
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("sel", b.dataset.t === t));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (t === "find") { anim = true; render(); }
+}
+$("tabs").addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) setTab(b.dataset.t); });
+
+/* ---------- controls ---------- */
+$("skipNight").checked = skipNight;
+$("skipNight").addEventListener("change", e => { skipNight = e.target.checked; localStorage.setItem("tt_skip", skipNight ? "1" : "0"); anim = true; render(); });
+$("viewSel").addEventListener("change", e => { viewTz = e.target.value; localStorage.setItem("tt_view", viewTz); render(); });
+$("editBtn").addEventListener("click", () => { editing = true; route(); });
+$("copyBtn").addEventListener("click", async e => {
+  try { await navigator.clipboard.writeText(location.href.split("#")[0]); e.target.textContent = "Link copied ✓"; setTimeout(() => e.target.textContent = "Copy page link", 1800); }
+  catch (err) { showError("Could not copy. Copy the address from the browser bar instead."); }
+});
+$("leaveBtn").addEventListener("click", async () => {
+  if (!confirm("Remove your column and everything you typed? This can’t be undone.")) return;
+  try { await remove(ref(db, "people/" + me)); localStorage.removeItem("tt_me"); me = null; route(); } catch (err) { showError(err); }
+});
+</script>
+</body>
+</html>
